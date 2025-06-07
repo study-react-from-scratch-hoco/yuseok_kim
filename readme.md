@@ -1,3 +1,7 @@
+# 목차
+- [1주차 소감](#1주차-소감-1st-week-feelings)
+- [1.1주차 소감-JSX parser](#1-1-주차-소감)
+
 ### 1주차 소감 (1st Week Feelings)
 
 **파일 확장자를 ts로 해 놓고 어 왜 예제가 안 되는거지 해버렸습니다. </br>**
@@ -73,3 +77,18 @@ The fundamental difference lies in their **development workflow and compilation.
 *   `app2.ts` is written to be as **close to plain JavaScript as possible** while still demonstrating React's core component-based idea. It avoids JSX and directly uses `createElement` calls. Its `createElement` function directly creates and manipulates DOM nodes, making it a more "self-contained" way to build the UI without needing a JSX transformation step. This is a more "vanilla" or "from-scratch" approach to building a UI library.
 
 In essence, `app.tsx` demonstrates how you'd typically write a React-like application today (using JSX for developer convenience), while `app2.ts` shows the underlying mechanics that JSX abstracts away. They achieve the same visual output, but `app.tsx` relies on a build step for its JSX syntax, while `app2.ts` does not for its "app code" (though it still uses TypeScript, which requires compilation to JavaScript).
+
+### 1-1 주차 소감
+**Create JSX parser (JSX to ReactCreateElement) with Cursor.ai with Gemini)**
+- **[parser.ts](parser.ts) - JSX parser**
+- **[test_parser.ts](test_parser.ts) - Unit test code for parser.ts**
+
+- 리엑트 라이브러리의 기반에서 중요 요소 중 하나는 JSX 문법이라고 생각합니다.
+AST까지 구현은 어려울 거 같았지만, 단순 Parsing은 (tsx 파일을 tsc로 컴파일 했을 때 어떤 일이 일어나나 정도는) 충분히 시도해볼만 했다고 생각했습니다.
+    - 그런데 제가 일일이 머리써서 코드를 쓰거나 맨땅에 삽질하긴 싫었습니다.
+    - 그래서 Cursor랑 같이 하면서 구경하는 게 재밌더라구요.
+- I thought React library's core infra feature is JSX syntax. Implemenation AST is to hard to me, but just Parsing should be possilbe(like tsc's compile for tsx)
+     - But I type and think hard isn't my likes
+     - So, I call Cursor AI
+- Cursor랑 같이 구현하면서 느낀 소감은 은근히 Regex가 복잡하고, 또 번거롭다? 그리고 ADD를 위한 TDD는 사람의 지적 수고를 아주 많이 덜어준다 인 거 같아요.
+- My feelings with Cursor, to implement this. Regex is annoying in slightly, and TDD for ADD is very good for me, by reducing reasoning job.
