@@ -81,117 +81,145 @@ const extractBalancedJsExpression = (source: string, startIndex: number): { cont
     return null; // Malformed: unmatched brace
 };
 
+/**
+ * Helper function to process children content, handling JSX elements, JavaScript expressions, and plain text.
+ * This function is designed to be called recursively by transformJsxToReactCreateElement.
+ * @param childrenRaw The raw string content of children to process.
+ * @returns An array of processed child strings ready for React.createElement.
+ */
+function processChildren(childrenRaw: string): string[] {
+    const processedChildren: string[] = [];
+    let currentIndex = 0;
+
+    if (childrenRaw.trim().length === 0) {
+        return processedChildren; // Return empty for empty or whitespace-only children
+    }
+
+    while (currentIndex < childrenRaw.length) {
+        const remaining = childrenRaw.substring(currentIndex);
+
+        if (remaining.startsWith('<')) {
+            // Potential JSX element
+            // Using the more robust regex from element parsing that captures tag and attributes
+            const selfClosingMatch = remaining.match(/^<(\w+)([^>]*)?\/>/);
+            if (selfClosingMatch) {
+                const selfClosingJsx = selfClosingMatch[0];
+                processedChildren.push(transformJsxToReactCreateElement(selfClosingJsx));
+                currentIndex += selfClosingJsx.length;
+                continue;
+            }
+
+            const openTagMatch = remaining.match(/^<(\w+)([^>]*)>/);
+            if (openTagMatch) {
+                const tagName = openTagMatch[1];
+                let balance = 1; // Start with 1 for the current opening tag
+                let tempIndex = openTagMatch[0].length; // Start scanning after the opening tag
+                let foundEnd = false;
+
+                while (tempIndex < remaining.length && balance > 0) {
+                    // Check for opening tags of the same type
+                    if (remaining.substring(tempIndex, tempIndex + tagName.length + 1) === `<${tagName}` &&
+                        (remaining[tempIndex + tagName.length + 1] === '>' || /\s/.test(remaining[tempIndex + tagName.length + 1]))) {
+                        balance++;
+                        tempIndex += tagName.length + 1; // Move past the tag name for a simple match
+                        // Need to correctly advance past attributes if any
+                        let attrEnd = remaining.indexOf('>', tempIndex);
+                        if (attrEnd !== -1) tempIndex = attrEnd + 1;
+                        else tempIndex++; // Fallback
+                        continue;
+                    }
+
+                    // Check for closing tags of the same type
+                    if (remaining.substring(tempIndex, tempIndex + tagName.length + 3) === `</${tagName}>`) {
+                        balance--;
+                        if (balance === 0) {
+                            foundEnd = true;
+                            tempIndex += tagName.length + 3; // Move past the closing tag
+                            break;
+                        }
+                        tempIndex += tagName.length + 3;
+                        continue;
+                    }
+
+                    // Check for self-closing tags (nested within current element's content)
+                    const nestedSelfClosingMatch = remaining.substring(tempIndex).match(/^<\w+[^>]*?\/>/);
+                    if (nestedSelfClosingMatch) {
+                        tempIndex += nestedSelfClosingMatch[0].length;
+                        continue;
+                    }
+
+                    tempIndex++;
+                }
+
+                if (foundEnd) {
+                    const jsxChild = remaining.substring(0, tempIndex);
+                    processedChildren.push(transformJsxToReactCreateElement(jsxChild));
+                    currentIndex += tempIndex;
+                } else {
+                    // Malformed JSX, couldn't find matching closing tag
+                    processedChildren.push(`// Error: Malformed nested JSX, missing closing tag for <${tagName}> in: "${remaining}"`);
+                    currentIndex = childrenRaw.length; // Stop processing this segment
+                }
+            } else {
+                // Not a well-formed opening tag, treat as text
+                const nextTagOrExpression = remaining.indexOf('<', 1);
+                const nextJsExpression = remaining.indexOf('{');
+                let endIndex = remaining.length;
+                if (nextTagOrExpression !== -1 && (nextJsExpression === -1 || nextTagOrExpression < nextJsExpression)) {
+                    endIndex = nextTagOrExpression;
+                }
+                else if (nextJsExpression !== -1 && (nextTagOrExpression === -1 || nextJsExpression < nextTagOrExpression)) {
+                    endIndex = nextJsExpression;
+                }
+                const textContent = remaining.substring(0, endIndex);
+                if (textContent.length > 0) {
+                    // Normalize text escaping to \'
+                    processedChildren.push(`'${textContent.replace(/'/g, "\\'")}'`);
+                }
+                currentIndex += endIndex;
+            }
+        }
+        else if (remaining.startsWith('{')) {
+            // JavaScript expression
+            const exprResult = extractBalancedJsExpression(remaining, 0);
+            if (exprResult) {
+                processedChildren.push(exprResult.content);
+                currentIndex += exprResult.endIndex;
+            } else {
+                processedChildren.push(`// Error: Malformed JavaScript expression, missing closing brace in: "${remaining}"`);
+                currentIndex = childrenRaw.length;
+            }
+        }
+        else {
+            // Plain text content
+            const nextTag = remaining.indexOf('<');
+            const nextJsExpression = remaining.indexOf('{');
+            let endIndex = remaining.length;
+
+            if (nextTag !== -1 && (nextJsExpression === -1 || nextTag < nextJsExpression)) {
+                endIndex = nextTag;
+            }
+            else if (nextJsExpression !== -1 && (nextTag === -1 || nextJsExpression < nextTag)) {
+                endIndex = nextJsExpression;
+            }
+            const textContent = remaining.substring(0, endIndex);
+            if (textContent.length > 0) {
+                // Normalize text escaping to \'
+                processedChildren.push(`'${textContent.replace(/'/g, "\\'")}'`);
+            }
+            currentIndex += endIndex;
+        }
+    }
+    return processedChildren;
+}
+
 export function transformJsxToReactCreateElement(jsxString: string): string {
     jsxString = jsxString.trim();
 
     const fragmentMatch = jsxString.match(/^<>([\s\S]*?)<\/>$/); // Match fragment syntax and capture content
     if (fragmentMatch) {
         const childrenRawFragment = fragmentMatch[1] || '';
-        const processedChildren: string[] = [];
-        if (childrenRawFragment.trim().length > 0) {
-            let currentFragmentIndex = 0;
-            while (currentFragmentIndex < childrenRawFragment.length) {
-                const remaining = childrenRawFragment.substring(currentFragmentIndex);
-
-                if (remaining.startsWith('<')) {
-                    // JSX element
-                    const selfClosingMatch = remaining.match(/^<\w+[^>]*?\/>/);
-                    if (selfClosingMatch) {
-                        const selfClosingJsx = selfClosingMatch[0];
-                        processedChildren.push(transformJsxToReactCreateElement(selfClosingJsx));
-                        currentFragmentIndex += selfClosingJsx.length;
-                        continue;
-                    }
-
-                    const openTagMatch = remaining.match(/^<(\w+)([^>]*)>/);
-                    if (openTagMatch) {
-                        const tagName = openTagMatch[1];
-                        let balance = 1;
-                        let tempIndex = openTagMatch[0].length;
-                        let foundEnd = false;
-
-                        while (tempIndex < remaining.length && balance > 0) {
-                            if (remaining.substring(tempIndex, tempIndex + tagName.length + 1) === `<${tagName}` &&
-                                (remaining[tempIndex + tagName.length + 1] === '>' || /\s/.test(remaining[tempIndex + tagName.length + 1]))) {
-                                balance++;
-                                let attrEnd = remaining.indexOf('>', tempIndex);
-                                if (attrEnd !== -1) tempIndex = attrEnd + 1;
-                                else tempIndex++;
-                                continue;
-                            }
-
-                            if (remaining.substring(tempIndex, tempIndex + tagName.length + 3) === `</${tagName}>`) {
-                                balance--;
-                                if (balance === 0) {
-                                    foundEnd = true;
-                                    tempIndex += tagName.length + 3;
-                                    break;
-                                }
-                                tempIndex += tagName.length + 3;
-                                continue;
-                            }
-
-                            const nestedSelfClosingMatch = remaining.substring(tempIndex).match(/^<\w+[^>]*?\/>/);
-                            if (nestedSelfClosingMatch) {
-                                tempIndex += nestedSelfClosingMatch[0].length;
-                                continue;
-                            }
-                            tempIndex++;
-                        }
-
-                        if (foundEnd) {
-                            const jsxChild = remaining.substring(0, tempIndex);
-                            processedChildren.push(transformJsxToReactCreateElement(jsxChild));
-                            currentFragmentIndex += tempIndex;
-                        } else {
-                            processedChildren.push(`// Error: Malformed nested JSX in fragment, missing closing tag for <${tagName}> in: "${remaining}"`);
-                            currentFragmentIndex = childrenRawFragment.length;
-                        }
-                    } else {
-                        // Not a well-formed opening tag, treat as text
-                        const nextTagOrExpression = remaining.indexOf('<', 1);
-                        const nextJsExpression = remaining.indexOf('{');
-                        let endIndex = remaining.length;
-                        if (nextTagOrExpression !== -1 && (nextJsExpression === -1 || nextTagOrExpression < nextJsExpression)) {
-                            endIndex = nextTagOrExpression;
-                        } else if (nextJsExpression !== -1 && (nextTagOrExpression === -1 || nextJsExpression < nextTagOrExpression)) {
-                            endIndex = nextJsExpression;
-                        }
-                        const textContent = remaining.substring(0, endIndex);
-                        if (textContent.length > 0) {
-                            processedChildren.push(`'${textContent.replace(/'/g, "\\'")}'`);
-                        }
-                        currentFragmentIndex += endIndex;
-                    }
-                } else if (remaining.startsWith('{')) {
-                    // JavaScript expression
-                    const exprResult = extractBalancedJsExpression(remaining, 0);
-                    if (exprResult) {
-                        processedChildren.push(exprResult.content);
-                        currentFragmentIndex += exprResult.endIndex;
-                    } else {
-                        processedChildren.push(`// Error: Malformed JavaScript expression in fragment, missing closing brace in: "${remaining}"`);
-                        currentFragmentIndex = childrenRawFragment.length;
-                    }
-                } else {
-                    // Plain text content
-                    const nextTag = remaining.indexOf('<');
-                    const nextJsExpression = remaining.indexOf('{');
-                    let endIndex = remaining.length;
-
-                    if (nextTag !== -1 && (nextJsExpression === -1 || nextTag < nextJsExpression)) {
-                        endIndex = nextTag;
-                    } else if (nextJsExpression !== -1 && (nextTag === -1 || nextJsExpression < nextTag)) {
-                        endIndex = nextJsExpression;
-                    }
-                    const textContent = remaining.substring(0, endIndex);
-                    if (textContent.length > 0) {
-                        processedChildren.push(`'${textContent.replace(/'/g, "\'")}'`);
-                    }
-                    currentFragmentIndex += endIndex;
-                }
-            }
-        }
+        const processedChildren = processChildren(childrenRawFragment); // Call the new helper function
         const childrenStringFragment = processedChildren.length > 0 ? processedChildren.join(', ') : 'null';
         return `React.createElement(React.Fragment, null${childrenStringFragment !== 'null' ? ', ' + childrenStringFragment : ''})`;
     }
@@ -267,121 +295,7 @@ export function transformJsxToReactCreateElement(jsxString: string): string {
     const propsString = attributes.length > 0 ? `{ ${attributes.join(', ')} }` : 'null';
 
     // 2. Handle Children
-    const processedChildren: string[] = [];
-    if (!isSelfClosing && childrenRaw.trim().length > 0) {
-        let currentIndex = 0;
-        const childrenContent = childrenRaw;
-
-        while (currentIndex < childrenContent.length) {
-            const remaining = childrenContent.substring(currentIndex);
-
-            if (remaining.startsWith('<')) {
-                // Potential JSX element
-                const selfClosingMatch = remaining.match(/^<(\w+)([^>]*)?\/>/);
-                if (selfClosingMatch) {
-                    const selfClosingJsx = selfClosingMatch[0];
-                    processedChildren.push(transformJsxToReactCreateElement(selfClosingJsx));
-                    currentIndex += selfClosingJsx.length;
-                    continue;
-                }
-
-                const openTagMatch = remaining.match(/^<(\w+)([^>]*)>/);
-                if (openTagMatch) {
-                    const tagName = openTagMatch[1];
-                    let balance = 1; // Start with 1 for the current opening tag
-                    let tempIndex = openTagMatch[0].length; // Start scanning after the opening tag
-                    let foundEnd = false;
-
-                    while (tempIndex < remaining.length && balance > 0) {
-                        // Check for opening tags of the same type
-                        if (remaining.substring(tempIndex, tempIndex + tagName.length + 1) === `<${tagName}` &&
-                            (remaining[tempIndex + tagName.length + 1] === '>' || /\s/.test(remaining[tempIndex + tagName.length + 1]))) {
-                            balance++;
-                            tempIndex += tagName.length + 1; // Move past the tag name for a simple match
-                            // Need to correctly advance past attributes if any
-                            let attrEnd = remaining.indexOf('>', tempIndex);
-                            if (attrEnd !== -1) tempIndex = attrEnd + 1;
-                            else tempIndex++; // Fallback
-                            continue;
-                        }
-
-                        // Check for closing tags of the same type
-                        if (remaining.substring(tempIndex, tempIndex + tagName.length + 3) === `</${tagName}>`) {
-                            balance--;
-                            if (balance === 0) {
-                                foundEnd = true;
-                                tempIndex += tagName.length + 3; // Move past the closing tag
-                                break;
-                            }
-                            tempIndex += tagName.length + 3;
-                            continue;
-                        }
-
-                        // Check for self-closing tags (nested within current element's content)
-                        const nestedSelfClosingMatch = remaining.substring(tempIndex).match(/^<\w+[^>]*?\/>/);
-                        if (nestedSelfClosingMatch) {
-                            tempIndex += nestedSelfClosingMatch[0].length;
-                            continue;
-                        }
-
-                        tempIndex++;
-                    }
-
-                    if (foundEnd) {
-                        const jsxChild = remaining.substring(0, tempIndex);
-                        processedChildren.push(transformJsxToReactCreateElement(jsxChild));
-                        currentIndex += tempIndex;
-                    } else {
-                        // Malformed JSX, couldn't find matching closing tag
-                        processedChildren.push(`// Error: Malformed nested JSX, missing closing tag for <${tagName}> in: "${remaining}"`);
-                        currentIndex = childrenContent.length; // Stop processing this segment
-                    }
-                } else {
-                    // Not a well-formed opening tag, treat as text
-                    const nextTagOrExpression = remaining.indexOf('<', 1);
-                    const nextJsExpression = remaining.indexOf('{');
-                    let endIndex = remaining.length;
-                    if (nextTagOrExpression !== -1 && (nextJsExpression === -1 || nextTagOrExpression < nextJsExpression)) {
-                        endIndex = nextTagOrExpression;
-                    } else if (nextJsExpression !== -1 && (nextTagOrExpression === -1 || nextJsExpression < nextTagOrExpression)) {
-                        endIndex = nextJsExpression;
-                    }
-                    const textContent = remaining.substring(0, endIndex);
-                    if (textContent.length > 0) {
-                        processedChildren.push(`'${textContent.replace(/'/g, "\'")}'`);
-                    }
-                    currentIndex += endIndex;
-                }
-            } else if (remaining.startsWith('{')) {
-                // JavaScript expression
-                const exprResult = extractBalancedJsExpression(remaining, 0);
-                if (exprResult) {
-                    processedChildren.push(exprResult.content);
-                    currentIndex += exprResult.endIndex;
-                } else {
-                    processedChildren.push(`// Error: Malformed JavaScript expression, missing closing brace in: "${remaining}"`);
-                    currentIndex = childrenContent.length;
-                }
-            } else {
-                // Plain text content
-                const nextTag = remaining.indexOf('<');
-                const nextJsExpression = remaining.indexOf('{');
-                let endIndex = remaining.length;
-
-                if (nextTag !== -1 && (nextJsExpression === -1 || nextTag < nextJsExpression)) {
-                    endIndex = nextTag;
-                } else if (nextJsExpression !== -1 && (nextTag === -1 || nextJsExpression < nextTag)) {
-                    endIndex = nextJsExpression;
-                }
-                const textContent = remaining.substring(0, endIndex);
-                if (textContent.length > 0) {
-                    processedChildren.push(`'${textContent.replace(/'/g, "\'")}'`);
-                }
-                currentIndex += endIndex;
-            }
-        }
-    }
-
+    const processedChildren = processChildren(childrenRaw); // Call the new helper function
     let childrenString = processedChildren.length > 0 ? processedChildren.join(', ') : 'null';
 
     if (isSelfClosing) {
