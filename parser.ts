@@ -12,40 +12,183 @@
  * - Simple JavaScript expressions as children (e.g., `{myVar}`).
  * - Fragments (<>...</>).
  *
- * It will NOT correctly parse:
- * - JSX inside string literals.
- * - Complex JavaScript expressions as attribute values (e.g., `value={myFunction()}`).
- * - Complex JavaScript expressions as children (e.g., `{a + b}` or `{() => {}}`).
- * - Self-closing tags with no space before `/>` (e.g., `<input/>` may be problematic without careful regex).
- *
  * For robust JSX parsing, dedicated libraries or a language's built-in transpiler (like TypeScript's) are required.
  *
  * @param jsxString The JSX string to transform.
  * @returns A string representing the equivalent React.createElement call.
  */
+const extractBalancedJsExpression = (source: string, startIndex: number): { content: string; endIndex: number } | null => {
+    let balanceCurly = 0;
+    let balanceParen = 0;
+    let balanceSquare = 0;
+    let inStringSingle = false;
+    let inStringDouble = false;
+    let i = startIndex;
+
+    if (source[i] === '{') {
+        balanceCurly++;
+        i++;
+    } else {
+        return null;
+    }
+
+    const expressionContentStart = i;
+
+    while (i < source.length) {
+        const char = source[i];
+
+        if (inStringSingle) {
+            if (char === '\\') { // Handle escaped characters
+                i++; // Skip the escaped character
+            } else if (char === '\'') {
+                inStringSingle = false;
+            }
+        } else if (inStringDouble) {
+            if (char === '\\') { // Handle escaped characters
+                i++; // Skip the escaped character
+            } else if (char === '"') {
+                inStringDouble = false;
+            }
+        } else {
+            if (char === '{') {
+                balanceCurly++;
+            } else if (char === '}') {
+                balanceCurly--;
+            } else if (char === '(') {
+                balanceParen++;
+            } else if (char === ')') {
+                balanceParen--;
+            } else if (char === '[') {
+                balanceSquare++;
+            } else if (char === ']') {
+                balanceSquare--;
+            } else if (char === '\'') {
+                inStringSingle = true;
+            } else if (char === '"') {
+                inStringDouble = true;
+            }
+
+            // If the outermost curly brace is balanced, we've found the end of the expression
+            if (balanceCurly === 0) {
+                return {
+                    content: source.substring(expressionContentStart, i).trim(),
+                    endIndex: i + 1,
+                };
+            }
+        }
+        i++;
+    }
+    return null; // Malformed: unmatched brace
+};
+
 export function transformJsxToReactCreateElement(jsxString: string): string {
     jsxString = jsxString.trim();
 
     const fragmentMatch = jsxString.match(/^<>([\s\S]*?)<\/>$/); // Match fragment syntax and capture content
     if (fragmentMatch) {
         const childrenRawFragment = fragmentMatch[1] || '';
-        // Handle children for fragments similar to regular elements
         const processedChildren: string[] = [];
         if (childrenRawFragment.trim().length > 0) {
-            const cleanedChildren = childrenRawFragment.trim();
-            const childNodeRegex = /(<\w+[^>]*>.*?<\/\w+>|<\w+[^>]*?\/>)|(\{[^}]*\})|([^<{]+)/g;
-            let childMatch;
-            while ((childMatch = childNodeRegex.exec(cleanedChildren)) !== null) {
-                const jsxChild = childMatch[1];
-                const jsExpressionChild = childMatch[2];
-                const textChild = childMatch[3];
+            let currentFragmentIndex = 0;
+            while (currentFragmentIndex < childrenRawFragment.length) {
+                const remaining = childrenRawFragment.substring(currentFragmentIndex);
 
-                if (jsxChild) {
-                    processedChildren.push(transformJsxToReactCreateElement(jsxChild));
-                } else if (jsExpressionChild) {
-                    processedChildren.push(jsExpressionChild.substring(1, jsExpressionChild.length - 1).trim());
-                } else if (textChild && textChild.length > 0) {
-                    processedChildren.push(`'${textChild.replace(/'/g, "\\'")}'`);
+                if (remaining.startsWith('<')) {
+                    // JSX element
+                    const selfClosingMatch = remaining.match(/^<\w+[^>]*?\/>/);
+                    if (selfClosingMatch) {
+                        const selfClosingJsx = selfClosingMatch[0];
+                        processedChildren.push(transformJsxToReactCreateElement(selfClosingJsx));
+                        currentFragmentIndex += selfClosingJsx.length;
+                        continue;
+                    }
+
+                    const openTagMatch = remaining.match(/^<(\w+)([^>]*)>/);
+                    if (openTagMatch) {
+                        const tagName = openTagMatch[1];
+                        let balance = 1;
+                        let tempIndex = openTagMatch[0].length;
+                        let foundEnd = false;
+
+                        while (tempIndex < remaining.length && balance > 0) {
+                            if (remaining.substring(tempIndex, tempIndex + tagName.length + 1) === `<${tagName}` &&
+                                (remaining[tempIndex + tagName.length + 1] === '>' || /\s/.test(remaining[tempIndex + tagName.length + 1]))) {
+                                balance++;
+                                let attrEnd = remaining.indexOf('>', tempIndex);
+                                if (attrEnd !== -1) tempIndex = attrEnd + 1;
+                                else tempIndex++;
+                                continue;
+                            }
+
+                            if (remaining.substring(tempIndex, tempIndex + tagName.length + 3) === `</${tagName}>`) {
+                                balance--;
+                                if (balance === 0) {
+                                    foundEnd = true;
+                                    tempIndex += tagName.length + 3;
+                                    break;
+                                }
+                                tempIndex += tagName.length + 3;
+                                continue;
+                            }
+
+                            const nestedSelfClosingMatch = remaining.substring(tempIndex).match(/^<\w+[^>]*?\/>/);
+                            if (nestedSelfClosingMatch) {
+                                tempIndex += nestedSelfClosingMatch[0].length;
+                                continue;
+                            }
+                            tempIndex++;
+                        }
+
+                        if (foundEnd) {
+                            const jsxChild = remaining.substring(0, tempIndex);
+                            processedChildren.push(transformJsxToReactCreateElement(jsxChild));
+                            currentFragmentIndex += tempIndex;
+                        } else {
+                            processedChildren.push(`// Error: Malformed nested JSX in fragment, missing closing tag for <${tagName}> in: "${remaining}"`);
+                            currentFragmentIndex = childrenRawFragment.length;
+                        }
+                    } else {
+                        // Not a well-formed opening tag, treat as text
+                        const nextTagOrExpression = remaining.indexOf('<', 1);
+                        const nextJsExpression = remaining.indexOf('{');
+                        let endIndex = remaining.length;
+                        if (nextTagOrExpression !== -1 && (nextJsExpression === -1 || nextTagOrExpression < nextJsExpression)) {
+                            endIndex = nextTagOrExpression;
+                        } else if (nextJsExpression !== -1 && (nextTagOrExpression === -1 || nextJsExpression < nextTagOrExpression)) {
+                            endIndex = nextJsExpression;
+                        }
+                        const textContent = remaining.substring(0, endIndex);
+                        if (textContent.length > 0) {
+                            processedChildren.push(`'${textContent.replace(/'/g, "\'")}'`);
+                        }
+                        currentFragmentIndex += endIndex;
+                    }
+                } else if (remaining.startsWith('{')) {
+                    // JavaScript expression
+                    const exprResult = extractBalancedJsExpression(remaining, 0);
+                    if (exprResult) {
+                        processedChildren.push(exprResult.content);
+                        currentFragmentIndex += exprResult.endIndex;
+                    } else {
+                        processedChildren.push(`// Error: Malformed JavaScript expression in fragment, missing closing brace in: "${remaining}"`);
+                        currentFragmentIndex = childrenRawFragment.length;
+                    }
+                } else {
+                    // Plain text content
+                    const nextTag = remaining.indexOf('<');
+                    const nextJsExpression = remaining.indexOf('{');
+                    let endIndex = remaining.length;
+
+                    if (nextTag !== -1 && (nextJsExpression === -1 || nextTag < nextJsExpression)) {
+                        endIndex = nextTag;
+                    } else if (nextJsExpression !== -1 && (nextTag === -1 || nextJsExpression < nextTag)) {
+                        endIndex = nextJsExpression;
+                    }
+                    const textContent = remaining.substring(0, endIndex);
+                    if (textContent.length > 0) {
+                        processedChildren.push(`'${textContent.replace(/'/g, "\'")}'`);
+                    }
+                    currentFragmentIndex += endIndex;
                 }
             }
         }
@@ -55,12 +198,12 @@ export function transformJsxToReactCreateElement(jsxString: string): string {
 
     // Regex to capture tag, attributes, and children (or indicate self-closing)
     // Group 1: tag name for open/close tag
-    // Group 2: attributes for open/close tag
+    // Group 2: attributes for open/close tag (now handles '>' inside expressions)
     // Group 3: children content
     // Group 4: tag name for self-closing tag
-    // Group 5: attributes for self-closing tag
-    const match = jsxString.match(/^<(\w+)([^>]*)>([\s\S]*)<\/\1>$/) || // <tag attrs>children</tag>
-                  jsxString.match(/^<(\w+)([^>]*)?\/>$/);           // <tag attrs/>
+    // Group 5: attributes for self-closing tag (now handles '>' inside expressions)
+    const match = jsxString.match(/^<(\w+)(\s*(?:"[^"]*"|'[^']*'|\{[\s\S]*\}|[^">])*)>([\s\S]*)<\/\1>$/) || // <tag attrs>children</tag>
+                  jsxString.match(/^<(\w+)(\s*(?:"[^"]*"|'[^']*'|\{[\s\S]*\}|[^">])*)\/?>$/);           // <tag attrs/>
 
     if (!match) {
         return `// Error: Could not parse simple JSX for input: "${jsxString}"`;
@@ -73,27 +216,52 @@ export function transformJsxToReactCreateElement(jsxString: string): string {
 
     // 1. Parse Attributes
     const attributes: string[] = [];
-    // Matches: key="value", key='value', key={expression}, key
-    const attrRegex = /(\w+)(?:="([^"]*)"|='([^']*)'|=\{([^}]*)\})?/g;
-    let attrMatch;
-    while ((attrMatch = attrRegex.exec(attributesRaw)) !== null) {
-        const key = attrMatch[1];
-        const valueDoubleQuote = attrMatch[2];
-        const valueSingleQuote = attrMatch[3];
-        const valueExpression = attrMatch[4]; // This will be treated as raw expression
+    let currentAttrIndex = 0;
+    while (currentAttrIndex < attributesRaw.length) {
+        const remainingAttrs = attributesRaw.substring(currentAttrIndex);
 
-        if (valueDoubleQuote !== undefined) {
-            attributes.push(`${key}: "${valueDoubleQuote.replace(/"/g, '\\\\"')}"`);
-        } else if (valueSingleQuote !== undefined) {
-            attributes.push(`${key}: "${valueSingleQuote.replace(/'/g, "\\\\'")}"`);
-        } else if (valueExpression !== undefined) {
-            // IMPORTANT LIMITATION: This simplified parser just inserts the expression as-is.
-            // It does not parse or validate the JS expression within {}.
-            attributes.push(`${key}: ${valueExpression}`);
-        } else {
-            // Boolean attribute (e.g., 'draggable')
-            attributes.push(`${key}: true`);
+        // Try to match a key="value" or key='value' pattern
+        let match = remainingAttrs.match(/^\s*(\w+)="([^"]*)"/);
+        if (!match) {
+            match = remainingAttrs.match(/^\s*(\w+)='([^']*)'/);
         }
+
+        if (match) {
+            const key = match[1];
+            const value = match[2];
+            attributes.push(`${key}: "${value.replace(/"/g, '\\"').replace(/'/g, "\\'")}"`);
+            currentAttrIndex += match[0].length;
+            continue;
+        }
+
+        // Try to match a key={expression} pattern
+        const exprMatch = remainingAttrs.match(/^\s*(\w+)=\{/);
+        if (exprMatch) {
+            const key = exprMatch[1];
+            const braceStartIndex = remainingAttrs.indexOf('{');
+            const exprResult = extractBalancedJsExpression(remainingAttrs, braceStartIndex);
+            if (exprResult) {
+                attributes.push(`${key}: ${exprResult.content}`);
+                currentAttrIndex += exprResult.endIndex;
+                continue;
+            } else {
+                attributes.push(`${key}: /* Malformed Expression */ null`);
+                currentAttrIndex = attributesRaw.length; // Stop processing malformed attributes
+                continue;
+            }
+        }
+
+        // Try to match a boolean attribute (key only)
+        const boolMatch = remainingAttrs.match(/^\s*(\w+)/);
+        if (boolMatch) {
+            const key = boolMatch[1];
+            attributes.push(`${key}: true`);
+            currentAttrIndex += boolMatch[0].length;
+            continue;
+        }
+
+        // If nothing matches, advance by one character to avoid infinite loop (should not happen with well-formed JSX)
+        currentAttrIndex++;
     }
 
     const propsString = attributes.length > 0 ? `{ ${attributes.join(', ')} }` : 'null';
@@ -180,19 +348,17 @@ export function transformJsxToReactCreateElement(jsxString: string): string {
                     }
                     const textContent = remaining.substring(0, endIndex);
                     if (textContent.length > 0) {
-                        processedChildren.push(`'${textContent.replace(/'/g, "\\'")}'`);
+                        processedChildren.push(`'${textContent.replace(/'/g, "\'")}'`);
                     }
                     currentIndex += endIndex;
                 }
             } else if (remaining.startsWith('{')) {
                 // JavaScript expression
-                const endOfExpression = remaining.indexOf('}');
-                if (endOfExpression !== -1) {
-                    const jsExpressionChild = remaining.substring(1, endOfExpression).trim();
-                    processedChildren.push(jsExpressionChild);
-                    currentIndex += endOfExpression + 1;
+                const exprResult = extractBalancedJsExpression(remaining, 0);
+                if (exprResult) {
+                    processedChildren.push(exprResult.content);
+                    currentIndex += exprResult.endIndex;
                 } else {
-                    // Malformed JS expression
                     processedChildren.push(`// Error: Malformed JavaScript expression, missing closing brace in: "${remaining}"`);
                     currentIndex = childrenContent.length;
                 }
@@ -209,7 +375,7 @@ export function transformJsxToReactCreateElement(jsxString: string): string {
                 }
                 const textContent = remaining.substring(0, endIndex);
                 if (textContent.length > 0) {
-                    processedChildren.push(`'${textContent.replace(/'/g, "\\'")}'`);
+                    processedChildren.push(`'${textContent.replace(/'/g, "\'")}'`);
                 }
                 currentIndex += endIndex;
             }
