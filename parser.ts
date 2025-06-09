@@ -159,7 +159,7 @@ export function transformJsxToReactCreateElement(jsxString: string): string {
                         }
                         const textContent = remaining.substring(0, endIndex);
                         if (textContent.length > 0) {
-                            processedChildren.push(`'${textContent.replace(/'/g, "\'")}'`);
+                            processedChildren.push(`'${textContent.replace(/'/g, "\\'")}'`);
                         }
                         currentFragmentIndex += endIndex;
                     }
