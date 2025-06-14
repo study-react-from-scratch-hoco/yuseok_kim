@@ -1,6 +1,8 @@
 # 목차
 - [1주차 소감](#1주차-소감-1st-week-feelings)
 - [1.1주차 소감-JSX parser](#1-1-주차-소감)
+- [2주차 소감](#2주차-소감)
+- [2.1 Parser](#2.1-Self-created-parser-using)
 
 ### 1주차 소감 (1st Week Feelings)
 
@@ -92,3 +94,17 @@ AST까지 구현은 어려울 거 같았지만, 단순 Parsing은 (tsx 파일을
      - So, I call Cursor AI
 - Cursor랑 같이 구현하면서 느낀 소감은 은근히 Regex가 복잡하고, 또 번거롭다? 그리고 ADD를 위한 TDD는 사람의 지적 수고를 아주 많이 덜어준다 인 거 같아요.
 - My feelings with Cursor, to implement this. Regex is annoying in slightly, and TDD for ADD is very good for me, by reducing reasoning job.
+
+### 2주차 소감
+- State 관리가 왜 중요한지, 그리고 어려운지 체감을 할 수있는 좋은 기회였네요.
+    - 지금 예제는 0번부터 idx + cursor로 관리하지만, key-value로 관리하는 방법도 있지 않을까 고민이 들었네요.
+      - 그러면 대신 state 이름이 중복이 안 되는 제약이 생길 거 같기도 하고요.
+      - 하지만 많은 상태를 관리할 때 효율적으로 접근할 수 있지 않을까요? 특정 state에 대한 거만 re rendering 하거나,\
+        cursor 관리 대신 state 이름 관리만 하면 되니까요.
+- 상태 관리를 array 에서 hashmap으로 바꿀때 어떤 영향이 있을 지 한번 궁금해졌어요.
+
+### 2.1 Self created parser using (under construction)
+- 이전에 만들어두었던 간단한 parser를 ts 파일에서 한번 활용해 보려고 했는데, 안 되더라구요.
+    - 그래서 이걸 일단 cursor.ai랑 같이 맞춰보는 중에 느꼈는데, 어 이거 이상하게 만들고 있는데 생각이 들었어요.
+    - 하지만 잘 작동시켜둔 Unit Test 파일 덕분에 편하게 cursor, unit test 결과도 봐 주겠니? 했는데 알아서 뭔가 뚝딱뚝딱 하더라구요
+    - JSX 문법 parser가 참 어려운 주제였구나 싶었습니다.

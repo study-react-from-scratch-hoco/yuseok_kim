@@ -20,9 +20,9 @@ const React = {
     let domEl;
     // 0. Check the type of el
     //    if string we need to handle it like text node.
-    if (typeof el === 'string') {
+    if (typeof el === 'string' || typeof el === 'number') {
       // create an actual Text Node
-      domEl = document.createTextNode(el);
+      domEl = document.createTextNode(String(el));
       container.appendChild(domEl);
       // No children for text node so we return.
       return;
@@ -43,15 +43,44 @@ const React = {
     // 4. append the DOM node to the container.
     container.appendChild(domEl);
   };
+1
+  const currentstates = []
+  let currentStateIndex = 0;
+  const useState = (initialValue) => {
+    // check before setting AppState to initialValue
+    const currentStateCursor = currentStateIndex;
+    currentstates[currentStateIndex] = currentstates[currentStateIndex] || initialValue;
+    console.log('useState', currentstates[currentStateCursor], currentStateCursor, currentstates);
+    const setState = (value) => {
+      currentstates[currentStateCursor] = value;
+      console.log('setState', currentstates[currentStateCursor], currentStateIndex, currentstates);
+      reRender();
+    };
+    currentStateIndex++;
+    console.log('states Dump', currentStateIndex, currentstates);
+    return [currentstates[currentStateCursor], setState];
+  };
+
+  const reRender = () => {
+    const app = document.getElementById('myapp');
+    app.innerHTML = '';
+    currentStateIndex = 0;
+    render(<App />, app);
+    console.log('reRender');
+  };
   
   // ---- Application --- //
-  const App = () => {
-    const world = 'TSX';
+  const App = () => {  
+    const [world, setWorld] = useState('TSX');
+    const [count, setCount] = useState(0);
     return (
       <div draggable>
         <h2>Hello {world}!</h2>
-        <p>I am a pargraph</p>
-        <input type="text" />
+        <p>I am a paragraph</p>
+        <input type="text" value={world} onchange={(e) => setWorld(e.target.value)} />
+        <h2> Counter: {count}</h2>
+        <button onclick={() => setCount(count + 1)}>Increment</button>
+        <button onclick={() => setCount(count - 1)}>Decrement</button>
       </div>
     );
   };

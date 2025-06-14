@@ -1,3 +1,5 @@
+import { transformJsxToReactCreateElement } from './parser.js';
+
 // -- Library Code --
 const React_TS = {
     createElement: (tag, props, ...children) => {
@@ -37,13 +39,13 @@ const ReactDOM_TS = {
 
 // -- App Code --
 const App_TS = () => {
-    return (
-      React_TS.createElement('div', { draggable: "true" },
-        React_TS.createElement('h2', null, 'Hello React with Plain TS!'),
-        React_TS.createElement('p', null, 'I am a paragraph'),
-        React_TS.createElement('input', { type: "text" })
-      )
-    );
+    return eval(transformJsxToReactCreateElement(`
+        <div draggable="true">
+          <h2>Hello React with Plain TS!</h2>
+          <p>I am a paragraph</p>
+          <input type="text" />
+        </div>
+      `));
   };
 
 ReactDOM_TS.render(React_TS.createElement(App_TS, null), document.getElementById('myapp'));

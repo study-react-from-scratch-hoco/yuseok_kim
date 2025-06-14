@@ -1,3 +1,5 @@
+console.log('parser.ts module loaded');
+
 /**
  * A very simplified JSX to React.createElement transformer.
  *
@@ -157,7 +159,7 @@ function processChildren(childrenRaw: string): string[] {
                     currentIndex += tempIndex;
                 } else {
                     // Malformed JSX, couldn't find matching closing tag
-                    processedChildren.push(`// Error: Malformed nested JSX, missing closing tag for <${tagName}> in: "${remaining}"`);
+                    processedChildren.push(`null /* Error: Malformed nested JSX, missing closing tag for <${tagName}> in: "${remaining}" */`);
                     currentIndex = childrenRaw.length; // Stop processing this segment
                 }
             } else {
@@ -173,8 +175,8 @@ function processChildren(childrenRaw: string): string[] {
                 }
                 const textContent = remaining.substring(0, endIndex);
                 if (textContent.length > 0) {
-                    // Normalize text escaping to \'
-                    processedChildren.push(`'${textContent.replace(/'/g, "\\'")}'`);
+                    // Use JSON.stringify for robust string escaping
+                    processedChildren.push(JSON.stringify(textContent));
                 }
                 currentIndex += endIndex;
             }
@@ -186,7 +188,7 @@ function processChildren(childrenRaw: string): string[] {
                 processedChildren.push(exprResult.content);
                 currentIndex += exprResult.endIndex;
             } else {
-                processedChildren.push(`// Error: Malformed JavaScript expression, missing closing brace in: "${remaining}"`);
+                processedChildren.push(`null /* Error: Malformed JavaScript expression, missing closing brace in: "${remaining}" */`);
                 currentIndex = childrenRaw.length;
             }
         }
@@ -204,8 +206,8 @@ function processChildren(childrenRaw: string): string[] {
             }
             const textContent = remaining.substring(0, endIndex);
             if (textContent.length > 0) {
-                // Normalize text escaping to \'
-                processedChildren.push(`'${textContent.replace(/'/g, "\\'")}'`);
+                // Use JSON.stringify for robust string escaping
+                processedChildren.push(JSON.stringify(textContent));
             }
             currentIndex += endIndex;
         }
@@ -221,7 +223,7 @@ export function transformJsxToReactCreateElement(jsxString: string): string {
         const childrenRawFragment = fragmentMatch[1] || '';
         const processedChildren = processChildren(childrenRawFragment); // Call the new helper function
         const childrenStringFragment = processedChildren.length > 0 ? processedChildren.join(', ') : 'null';
-        return `React.createElement(React.Fragment, null${childrenStringFragment !== 'null' ? ', ' + childrenStringFragment : ''})`;
+        return `React_TS.createElement(React_TS.Fragment, null${childrenStringFragment !== 'null' ? ', ' + childrenStringFragment : ''})`;
     }
 
     // Regex to capture tag, attributes, and children (or indicate self-closing)
@@ -234,7 +236,7 @@ export function transformJsxToReactCreateElement(jsxString: string): string {
                   jsxString.match(/^<(\w+)(\s*(?:"[^"]*"|'[^']*'|\{[\s\S]*\}|[^">])*)\/?>$/);           // <tag attrs/>
 
     if (!match) {
-        return `// Error: Could not parse simple JSX for input: "${jsxString}"`;
+        return `null /* Error: Could not parse simple JSX for input: "${JSON.stringify(jsxString)}" */`;
     }
 
     const tagName = match[1] || match[4]; // Use tag name from either pattern
@@ -249,16 +251,16 @@ export function transformJsxToReactCreateElement(jsxString: string): string {
         const remainingAttrs = attributesRaw.substring(currentAttrIndex);
 
         // Try to match a key="value" or key='value' pattern
-        let match = remainingAttrs.match(/^\s*(\w+)="([^"]*)"/);
-        if (!match) {
-            match = remainingAttrs.match(/^\s*(\w+)='([^']*)'/);
+        let attrMatch = remainingAttrs.match(/^\s*(\w+)="([^"]*)"/);
+        if (!attrMatch) {
+            attrMatch = remainingAttrs.match(/^\s*(\w+)='([^']*)'/);
         }
 
-        if (match) {
-            const key = match[1];
-            const value = match[2];
-            attributes.push(`${key}: "${value.replace(/"/g, '\\"').replace(/'/g, "\\'")}"`);
-            currentAttrIndex += match[0].length;
+        if (attrMatch) {
+            const key = attrMatch[1];
+            const value = attrMatch[2];
+            attributes.push(`${key}: ${JSON.stringify(value)}`);
+            currentAttrIndex += attrMatch[0].length;
             continue;
         }
 
@@ -299,8 +301,8 @@ export function transformJsxToReactCreateElement(jsxString: string): string {
     let childrenString = processedChildren.length > 0 ? processedChildren.join(', ') : 'null';
 
     if (isSelfClosing) {
-        return `React.createElement('${tagName}', ${propsString})`;
+        return `React_TS.createElement('${tagName}', ${propsString})`;
     } else {
-        return `React.createElement('${tagName}', ${propsString}, ${childrenString})`;
+        return `React_TS.createElement('${tagName}', ${propsString}, ${childrenString})`;
     }
 } 
