@@ -62,6 +62,18 @@ export const App_TS = () => {
     const [world, setWorld] = useState_TS('Plain TS!');
     const [count, setCount] = useState_TS(0);
     
+    // IMPORTANT: This is a highly insecure, illustrative function for study purposes ONLY.
+    // DO NOT use this in a production environment with untrusted input.
+    // Real-world sanitization requires robust, battle-tested libraries (e.g., DOMPurify).
+    const basicUnsafeSanitize = (inputString: string): string => {
+        let sanitized = inputString;
+        // Very basic attempt to remove script tags and common dangerous attributes/protocols
+        sanitized = sanitized.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, ''); // Remove script tags
+        sanitized = sanitized.replace(/on\w+=/gi, 'data-removed-on='); // Replace 'on' event attributes
+        sanitized = sanitized.replace(/javascript:/gi, 'unsafe-javascript:'); // Replace javascript: protocol
+        return sanitized;
+    };
+
     const jsxString = `
         <div draggable="true">
           <h2>Hello React with {world}</h2>
@@ -72,8 +84,12 @@ export const App_TS = () => {
           <button onclick={() => setCount(count - 1)}>Decrement</button>
         </div>
       `;
-    console.log('JSX String:', jsxString);
-    const transformedJsx = transformJsxToReactCreateElement(jsxString);
+    console.log('Original JSX String:', jsxString);
+
+    const filteredJsxString = basicUnsafeSanitize(jsxString); // Apply the basic (insecure) filter
+    console.log('Filtered JSX String (Insecure Sample):', filteredJsxString);
+
+    const transformedJsx = transformJsxToReactCreateElement(filteredJsxString);
     console.log('Transformed JSX:', transformedJsx);
 
     // New line: Use Function constructor to pass necessary variables into scope
