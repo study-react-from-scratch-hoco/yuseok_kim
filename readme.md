@@ -2,9 +2,11 @@
 - [1주차 소감](#1주차-소감-1st-week-feelings)
 - [1.1주차 소감-JSX parser](#1-1-주차-소감)
 - [2주차 소감](#2주차-소감)
-- [2.1 Parser](#2.1-Self-created-parser-using)
+- [2.1 Parser](#21-Self-created-parser-using)
+- [2.2 Bundling](#22-bundling-by-tsc-with-tsconfig-options)
 
 ### 1주차 소감 (1st Week Feelings)
+[목차](#목차)
 
 **파일 확장자를 ts로 해 놓고 어 왜 예제가 안 되는거지 해버렸습니다. </br>**
 I wrote file extensions ts not tsx 😄, so why not works? I said </br>
@@ -81,6 +83,7 @@ The fundamental difference lies in their **development workflow and compilation.
 In essence, `app.tsx` demonstrates how you'd typically write a React-like application today (using JSX for developer convenience), while `app2.ts` shows the underlying mechanics that JSX abstracts away. They achieve the same visual output, but `app.tsx` relies on a build step for its JSX syntax, while `app2.ts` does not for its "app code" (though it still uses TypeScript, which requires compilation to JavaScript).
 
 ### 1-1 주차 소감
+[목차](#목차)
 **Create JSX parser (JSX to ReactCreateElement) with Cursor.ai with Gemini)**
 - **[parser.ts](parser.ts) - JSX parser**
 - **[test_parser.ts](test_parser.ts) - Unit test code for parser.ts**
@@ -96,6 +99,7 @@ AST까지 구현은 어려울 거 같았지만, 단순 Parsing은 (tsx 파일을
 - My feelings with Cursor, to implement this. Regex is annoying in slightly, and TDD for ADD is very good for me, by reducing reasoning job.
 
 ### 2주차 소감
+[목차](#목차)
 - State 관리가 왜 중요한지, 그리고 어려운지 체감을 할 수있는 좋은 기회였네요.
     - 지금 예제는 0번부터 idx + cursor로 관리하지만, key-value로 관리하는 방법도 있지 않을까 고민이 들었네요.
       - 그러면 대신 state 이름이 중복이 안 되는 제약이 생길 거 같기도 하고요.
@@ -104,6 +108,7 @@ AST까지 구현은 어려울 거 같았지만, 단순 Parsing은 (tsx 파일을
 - 상태 관리를 array 에서 hashmap으로 바꿀때 어떤 영향이 있을 지 한번 궁금해졌어요.
 
 ### 2.1 Self created parser using
+[목차](#목차)
 - 이전에 만들어두었던 간단한 parser를 ts 파일에서 한번 활용해 보려고 했는데, 안 되더라구요.
     - 그래서 이걸 일단 cursor.ai랑 같이 맞춰보는 중에 느꼈는데, 어 이거 이상하게 만들고 있는데 생각이 들었어요.
     - 하지만 잘 작동시켜둔 Unit Test 파일 덕분에 편하게 cursor, unit test 결과도 봐 주겠니? 했는데 알아서 뭔가 뚝딱뚝딱 하더라구요
@@ -120,3 +125,14 @@ AST까지 구현은 어려울 거 같았지만, 단순 Parsing은 (tsx 파일을
       Enhanced extractBalancedJsExpression to handle template literals, arrow functions, and complex expressions\
       **Attribute Parsing:** \
        Updated the main parsing function to use the same robust tag detection logic
+
+
+### 2.2 Bundling by tsc with tsconfig options
+[목차](#목차)
+- bundling을 위해 알려진 bundler library를 사용해야만 하는가 궁금했는데, tsc에서 어느정도 된다는 걸 보았어요 (thanks Gemini)
+- 근데 그냥 bundling만 한다고 되는 것도 아니라서, 어떻게 해야 잘 돌아가는가가 또 고려사항이 되더라구요
+- 그래서 구경을 좀 했는데 [PR #5](https://github.com/study-react-from-scratch-hoco/yuseok_kim/pull/5)
+    - 간단한 소감은 음 미묘하네요, 하지만 일단 vite나 webpack 같은 거 없이 시도를 해 볼 수 있었다?, tsc build로 해결했다?
+    - 그렇지만 require.js/2.3.6 의존성이 늘어난 건 왜인지 잘 모르겠어요,\
+     아무튼 이 친구가 bundle.js에서 필요한 부분만 뽑아준다로 이해했습니다.
+- 아 코파일럿의 리뷰에서 너 입력된 JSX 제대로 검사 안 하면 큰일 날 수 있다? 라는 곳에서 입력값 검증이란 기초적 시큐어코딩이 중요함을 되세겼네요.
