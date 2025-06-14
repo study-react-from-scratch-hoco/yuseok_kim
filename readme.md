@@ -103,8 +103,20 @@ AST까지 구현은 어려울 거 같았지만, 단순 Parsing은 (tsx 파일을
         cursor 관리 대신 state 이름 관리만 하면 되니까요.
 - 상태 관리를 array 에서 hashmap으로 바꿀때 어떤 영향이 있을 지 한번 궁금해졌어요.
 
-### 2.1 Self created parser using (under construction)
+### 2.1 Self created parser using
 - 이전에 만들어두었던 간단한 parser를 ts 파일에서 한번 활용해 보려고 했는데, 안 되더라구요.
     - 그래서 이걸 일단 cursor.ai랑 같이 맞춰보는 중에 느꼈는데, 어 이거 이상하게 만들고 있는데 생각이 들었어요.
     - 하지만 잘 작동시켜둔 Unit Test 파일 덕분에 편하게 cursor, unit test 결과도 봐 주겠니? 했는데 알아서 뭔가 뚝딱뚝딱 하더라구요
     - JSX 문법 parser가 참 어려운 주제였구나 싶었습니다.
+- 안 되는 걸 고친 claude 4 sonnet은 제 신인거 같네요
+    - ✅ Fixed Issues:
+    **Complex Tag Detection:** \
+    Implemented a robust findTagEnd function that properly handles JavaScript expressions inside attributes (like onClick={() => console.log('Clicked')})\
+    **Self-Closing Tag Recognition:** \
+    Fixed the regex patterns to correctly identify self-closing tags vs opening tags\
+    **Nested JSX Processing:** \
+     Fixed the processChildren function to properly handle nested JSX elements without infinite loops\
+     **JavaScript Expression Parsing: **\
+      Enhanced extractBalancedJsExpression to handle template literals, arrow functions, and complex expressions\
+      **Attribute Parsing:** \
+       Updated the main parsing function to use the same robust tag detection logic
