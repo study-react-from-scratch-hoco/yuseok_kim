@@ -6,6 +6,7 @@
     <title>Test Parser for React with Plain TS</title>
 </head>
 <body>
+    <button id="moveToIndex">Move to Index</button>
     <div id="testapp"></div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>
     <script>
@@ -19,6 +20,11 @@
         });
         require(['test_parser'], (test_parser) => {
            
+        });
+    </script>
+    <script>
+        document.getElementById('moveToIndex').addEventListener('click', () => {
+            window.location.href = 'index.html';
         });
     </script>
 </body>

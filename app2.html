@@ -7,6 +7,7 @@
 </head>
 <body>
     <button id="moveToTsx">Move to TSX</button>
+    <button id="testParser">Test Parser</button>
     <div id="tsbaseapp"></div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>
     <script>
@@ -32,6 +33,10 @@
 
         document.getElementById('moveToTsx').addEventListener('click', () => {
             window.location.href = 'index.html';
+        });
+
+        document.getElementById('testParser').addEventListener('click', () => {
+            window.location.href = 'test.html';
         });
     </script>
 </body>
