@@ -1,8 +1,10 @@
 {
+    "type": "module",
     "scripts": {
         "dev": "tsc -w",
         "build": "tsc",
-        "start": "tsc & npx serve ."
+        "start": "tsc & npx serve .",
+        "test": "tsc && node test_parser.js"
     },
     "devDependencies": {
         "typescript": "^5.8.3"
