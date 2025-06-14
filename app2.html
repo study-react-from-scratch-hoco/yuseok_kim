@@ -7,9 +7,29 @@
 </head>
 <body>
     <button id="moveToTsx">Move to TSX</button>
-    <div id="myapp"></div>
-    <script src="app2.js" type="module"></script>
+    <div id="tsbaseapp"></div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>
     <script>
+        require.config({
+            baseUrl: 'out',
+            paths: {
+                app: 'bundle',
+                parser: 'bundle',
+                app2: 'bundle',
+                test_parser: 'bundle'
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            require(['app2'], (app2) => {
+                if (app2 && app2.initializeApp_TS) {
+                    app2.initializeApp_TS();
+                } else {
+                    console.error('App2 module or initializeApp_TS function not found.');
+                }
+            });
+        });
+
         document.getElementById('moveToTsx').addEventListener('click', () => {
             window.location.href = 'index.html';
         });
