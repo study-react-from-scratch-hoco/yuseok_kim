@@ -1,12 +1,13 @@
 {
     "type": "module",
     "scripts": {
-        "dev": "tsc -w",
+        "dev": "concurrently \"npm run watch\" \"npm run start\"",
         "build": "tsc",
-        "start": "tsc & npx serve .",
-        "test": "tsc && node test_parser.js"
+        "watch": "tsc -w",
+        "start": "npx serve ."
     },
     "devDependencies": {
-        "typescript": "^5.8.3"
+        "typescript": "^5.8.3",
+        "concurrently": "^9.1.2"
     }
 }
