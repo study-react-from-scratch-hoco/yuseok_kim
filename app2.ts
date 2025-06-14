@@ -19,7 +19,7 @@ export const React_TS = {
         }
 
         children.forEach(child => {
-            if (typeof child === 'string' || typeof child === 'number') {
+            if (typeof child === 'string') {
                 element.appendChild(document.createTextNode(String(child)));
             } else if (child) {
                 element.appendChild(child);
