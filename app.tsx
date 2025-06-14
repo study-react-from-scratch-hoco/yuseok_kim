@@ -20,7 +20,7 @@ export const React = {
     let domEl;
     // 0. Check the type of el
     //    if string we need to handle it like text node.
-    if (typeof el === 'string' || typeof el === 'number') {
+    if (typeof el === 'string') {
       // create an actual Text Node
       domEl = document.createTextNode(String(el));
       container.appendChild(domEl);
@@ -70,7 +70,7 @@ export const useState = (initialValue) => {
         <h2>Hello {world}!</h2>
         <p>I am a paragraph</p>
         <input type="text" value={world} onchange={(e) => setWorld(e.target.value)} />
-        <h2> Counter: {count}</h2>
+        <h2> Counter: {count.toString()}</h2>
         <button onclick={() => setCount(count + 1)}>Increment</button>
         <button onclick={() => setCount(count - 1)}>Decrement</button>
       </div>

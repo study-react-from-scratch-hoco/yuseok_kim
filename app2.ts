@@ -79,7 +79,7 @@ export const App_TS = () => {
           <h2>Hello React with {world}</h2>
           <p>I am a paragraph</p>
           <input type="text" value={world} onchange={(e) => setWorld(e.target.value)} />
-          <h2> Counter: {count}</h2>
+          <h2> Counter: {count.toString()}</h2>
           <button onclick={() => setCount(count + 1)}>Increment</button>
           <button onclick={() => setCount(count - 1)}>Decrement</button>
         </div>
