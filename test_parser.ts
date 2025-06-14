@@ -1,4 +1,4 @@
-import { transformJsxToReactCreateElement } from './parser.js';
+import { transformJsxToReactCreateElement } from './parser';
 
 console.log('--- Testing transformJsxToReactCreateElement ---');
 
@@ -167,7 +167,7 @@ const jsx18 = `
           <button onclick={() => setCount(count - 1)}>Decrement</button>
         </div>
       `;
-const expected18 = `React_TS.createElement('div', { draggable: "true" }, "\n          ", React_TS.createElement('h2', null, "Hello React with ", world), "\n          ", React_TS.createElement('p', null, "I am a paragraph"), "\n          ", React_TS.createElement('input', { type: "text", value: world, onchange: (e) => setWorld(e.target.value) }), "\n          ", React_TS.createElement('h2', null, " Counter: ", count), "\n          ", React_TS.createElement('button', { onclick: () => setCount(count + 1) }, "Increment"), "\n          ", React_TS.createElement('button', { onclick: () => setCount(count - 1) }, "Decrement"), "\n        ")`;
+const expected18 = `React_TS.createElement('div', { draggable: "true" }, "\\n          ", React_TS.createElement('h2', null, "Hello React with ", world), "\\n          ", React_TS.createElement('p', null, "I am a paragraph"), "\\n          ", React_TS.createElement('input', { type: "text", value: world, onchange: (e) => setWorld(e.target.value) }), "\\n          ", React_TS.createElement('h2', null, " Counter: ", count), "\\n          ", React_TS.createElement('button', { onclick: () => setCount(count + 1) }, "Increment"), "\\n          ", React_TS.createElement('button', { onclick: () => setCount(count - 1) }, "Decrement"), "\\n        ")`;
 const result18 = transformJsxToReactCreateElement(jsx18);
 console.log(`Input:   ${jsx18}`);
 console.log(`Output:  ${result18}`);

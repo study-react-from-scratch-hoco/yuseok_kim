@@ -1,7 +1,7 @@
 // This will our main app file.
 
 // ---- Library --- //
-const React = {
+export const React = {
     createElement: (tag, props, ...children) => {
       if (typeof tag === 'function') {
         return tag(props, ...children);
@@ -16,7 +16,7 @@ const React = {
   };
   
   // ---- Library --- //
-  const render = (el, container) => {
+  export const render = (el, container) => {
     let domEl;
     // 0. Check the type of el
     //    if string we need to handle it like text node.
@@ -43,10 +43,10 @@ const React = {
     // 4. append the DOM node to the container.
     container.appendChild(domEl);
   };
-1
-  const currentstates = []
-  let currentStateIndex = 0;
-  const useState = (initialValue) => {
+
+export const currentstates = []
+export let currentStateIndex = 0;
+export const useState = (initialValue) => {
     // check before setting AppState to initialValue
     const currentStateCursor = currentStateIndex;
     currentstates[currentStateIndex] = currentstates[currentStateIndex] || initialValue;
@@ -54,23 +54,15 @@ const React = {
     const setState = (value) => {
       currentstates[currentStateCursor] = value;
       console.log('setState', currentstates[currentStateCursor], currentStateIndex, currentstates);
-      reRender();
+      initializeApp(); // Call the main rendering function
     };
     currentStateIndex++;
     console.log('states Dump', currentStateIndex, currentstates);
     return [currentstates[currentStateCursor], setState];
   };
 
-  const reRender = () => {
-    const app = document.getElementById('myapp');
-    app.innerHTML = '';
-    currentStateIndex = 0;
-    render(<App />, app);
-    console.log('reRender');
-  };
-  
   // ---- Application --- //
-  const App = () => {  
+  export const App = () => {  
     const [world, setWorld] = useState('TSX');
     const [count, setCount] = useState(0);
     return (
@@ -85,5 +77,14 @@ const React = {
     );
   };
   
-  render(<App />, document.getElementById('myapp'));
+  // Export a function that handles rendering
+  export function initializeApp() {
+      const app = document.getElementById('myapp');
+      if (app) {
+          app.innerHTML = '';
+          currentStateIndex = 0;
+          render(React.createElement(App, null), app);
+          console.log('reRender');
+      }
+  }
   
