@@ -3,7 +3,7 @@ import { transformJsxToReactCreateElement } from './parser';
 // -- Library Code --
 
 // Resource cache for Suspense
-const resourceCache_TS = {};
+const resourceCache_TS = new Map();
 
 // Track pending promises for parallel loading
 const pendingPromises_TS = new Map();
