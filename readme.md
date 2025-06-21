@@ -4,6 +4,7 @@
 - [2주차 소감](#2주차-소감)
 - [2.1 Parser](#21-Self-created-parser-using)
 - [2.2 Bundling](#22-bundling-by-tsc-with-tsconfig-options)
+- [3주차 소감](#3주차-소감)
 
 ### 1주차 소감 (1st Week Feelings)
 [목차](#목차)
@@ -136,3 +137,22 @@ AST까지 구현은 어려울 거 같았지만, 단순 Parsing은 (tsx 파일을
     - 그렇지만 require.js/2.3.6 의존성이 늘어난 건 왜인지 잘 모르겠어요,\
      아무튼 이 친구가 bundle.js에서 필요한 부분만 뽑아준다로 이해했습니다.
 - 아 코파일럿의 리뷰에서 너 입력된 JSX 제대로 검사 안 하면 큰일 날 수 있다? 라는 곳에서 입력값 검증이란 기초적 시큐어코딩이 중요함을 되세겼네요.
+
+### 2주차 소감
+[목차](#목차)
+- 우선 글이 도대체 무슨소리지 한참 고민하다 제미나이 친구에게 물어봤어요.\
+(프롬프트)
+```
+Let’s build a React from scratch: Part 3— React Suspense and Concurrent Mode | by Arindam Paul | Medium
++ mhtml 파일 추가 첨부
+
+이 글의 내용을 이해하기 좀 어려운데, 한글로 설명해줄 수 있을까?
+
+나는 React에 관해서는 부트캠프에서 Next.js 기반 프로그램 학습 경험 조금이고, Java 백엔드 위주로 5개월 학습했어
+회사에서는 Powerbuilder(ERP Project), C#(ASP.NET razor web page, .NET Framework DLL project) 경험 6개월,
+
+
+원래 컴퓨터공학 전공자가 아니었고, 독학학위제 시험을 통해 학사학위를 취득하였으며, 정보보안기사, 정보처리기사 자격증 수준의 기초만 있다
+```
+덕분에 이해가 수월해졌습니다.
+[답변](gemini_answer_01.md)
