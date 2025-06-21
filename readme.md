@@ -162,3 +162,6 @@ Let’s build a React from scratch: Part 3— React Suspense and Concurrent Mode
     - 중복요청 방지해야 하고, 비동기 요청은 한번에 불러야하기도 하고 이런 문제를 정리해주니 고마웠어요.
     - Promise.All 이 함부로 쓰이면 안 된다고 친구에개 배웠던 기억이 있는데 아 이렇게 쓰일 수도 있구나 하고 이해하는 계기가 되었기도 해요.
         - [친구와의 대화](talk_partial.md)
+     
+- @jjaneyxx 님의 3주차 질문에서 궁금한 걸 Gemini에게 물어봤는데, 좋은 질문, 궁금할만 한 부분을 같이 고민할 수 있어서 유익한 스터디시간이었습니다.
+    - [답변](gemini_answer_02.md)
