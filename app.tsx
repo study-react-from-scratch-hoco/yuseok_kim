@@ -3,7 +3,7 @@
 // ---- Library --- //
 
 // Resource cache for Suspense
-const resourceCache = {};
+const resourceCache = new Map();
 
 // Track pending promises for parallel loading
 const pendingPromises = new Map();
