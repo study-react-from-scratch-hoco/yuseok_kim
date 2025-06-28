@@ -39,9 +39,12 @@ if (isBrowser) {
 export const useRoute = () => {
   const [route, setRoute] = useState(currentRoute);
   
+  // Define a stable listener function
+  const listener = () => setRoute(currentRoute);
+  
   // Subscribe to route changes
-  if (isBrowser && !routeListeners.includes(() => setRoute(currentRoute))) {
-    routeListeners.push(() => setRoute(currentRoute));
+  if (isBrowser && !routeListeners.includes(listener)) {
+    routeListeners.push(listener);
   }
   
   return route;
