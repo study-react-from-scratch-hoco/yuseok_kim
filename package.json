@@ -4,7 +4,10 @@
         "dev": "concurrently \"npm run watch\" \"npm run start\"",
         "build": "tsc",
         "watch": "tsc -w",
-        "start": "npx serve ."
+        "start": "npx serve .",
+        "build:ssr": "tsc server.tsx app.tsx router.tsx styled.tsx Pages/*.tsx --jsx react --esModuleInterop --module commonjs --outDir dist",
+        "start:ssr": "node dist/server.js",
+        "ssr": "npm run build:ssr && npm run start:ssr"
     },
     "devDependencies": {
         "concurrently": "^9.1.2",

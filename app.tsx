@@ -291,31 +291,81 @@ export const useState = (initialValue) => {
     });
   };
 
+  // Import router and pages
+  import { Router, Route, Link } from './router';
+  import { Home } from './Pages/Home';
+  import { About } from './Pages/About';
+  import { Articles } from './Pages/Articles';
+  import { styled, createGlobalStyle } from './styled';
+  
+  // Global styles
+  const GlobalStyle = createGlobalStyle`
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: #f5f6fa;
+    }
+    
+    * {
+      box-sizing: border-box;
+    }
+  `;
+  
+  // Navigation styles
+  const Nav = styled.nav`
+    background: #2c3e50;
+    padding: 1rem 0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  `;
+  
+  const NavContainer = styled.div`
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    gap: 30px;
+  `;
+  
+  const Logo = styled.h1`
+    color: white;
+    font-size: 1.5rem;
+    margin: 0;
+    margin-right: auto;
+  `;
+  
+  const NavLink = styled.a`
+    color: white;
+    text-decoration: none;
+    font-size: 1.1rem;
+    padding: 8px 16px;
+    border-radius: 4px;
+    transition: background 0.2s;
+    
+    &:hover {
+      background: rgba(255,255,255,0.1);
+    }
+  `;
+  
   // ---- Application --- //
-  export const App = () => {  
-    const [world, setWorld] = useState('TSX');
-    const [count, setCount] = useState(0);
+  export const App = () => {
+    // Render global styles
+    GlobalStyle();
     
-    // Using createResource to load multiple images in parallel
-    const photo1 = createResource(() => getMyAwesomePic(2000), 'photo1');
-    const photo2 = createResource(() => getMyAwesomePic(3000), 'photo2');
-    const photo3 = createResource(() => getMyAwesomePic(1500), 'photo3');
-    
-    return (
-      <div draggable>
-        <h2>Hello {world}!</h2>
-        <p>I am a paragraph</p>
-        <input type="text" value={world} onChange={(e) => setWorld(e.target.value)} />
-        <h2> Counter: {count.toString()}</h2>
-        <button onClick={() => setCount(count + 1)}>Increment</button>
-        <button onClick={() => setCount(count - 1)}>Decrement</button>
-        <h2>Our Photo Album</h2>
-        <div>
-          <img src={photo1} alt="Photo 1" width="200" height="300" />
-          <img src={photo2} alt="Photo 2" width="200" height="300" />
-          <img src={photo3} alt="Photo 3" width="200" height="300" />
-        </div>
-      </div>
+    return React.createElement(Router, null,
+      React.createElement(Nav, null,
+        React.createElement(NavContainer, null,
+          React.createElement(Logo, null, 'Custom React'),
+          React.createElement(Link, { to: '/', component: NavLink }, 'Home'),
+          React.createElement(Link, { to: '/about', component: NavLink }, 'About'),
+          React.createElement(Link, { to: '/articles', component: NavLink }, 'Articles')
+        )
+      ),
+      
+      React.createElement(Route, { path: '/', element: React.createElement(Home, null) }),
+      React.createElement(Route, { path: '/about', element: React.createElement(About, null) }),
+      React.createElement(Route, { path: '/articles', element: React.createElement(Articles, null) })
     );
   };
   

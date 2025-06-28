@@ -1,5 +1,7 @@
 // Server-side rendering example for our custom React implementation
 import { React, renderToString, App, currentstates, resetState } from './app';
+import { StaticRouter } from './router';
+import { ServerStyleSheet } from './styled';
 
 // Simple HTTP server without Express
 import * as http from 'http';
@@ -7,7 +9,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 // HTML template
-const createHtmlTemplate = (content: string, stateData?: any) => {
+const createHtmlTemplate = (content: string, styles: string, stateData?: any) => {
   return `
 <!DOCTYPE html>
 <html lang="en">
@@ -15,6 +17,7 @@ const createHtmlTemplate = (content: string, stateData?: any) => {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SSR Example - Custom React</title>
+    ${styles}
 </head>
 <body>
     <div id="myapp">${content}</div>
@@ -78,18 +81,28 @@ const handleRequest = (req: http.IncomingMessage, res: http.ServerResponse) => {
     // Reset state for each request
     resetState();
     
-    // Create virtual DOM
-    const vdom = React.createElement(App, null);
+    // Create app with router for SSR
+    const appWithRouter = React.createElement(
+      StaticRouter, 
+      { location: url },
+      React.createElement(App, null)
+    );
+    
+    // Collect styles during rendering
+    const styledApp = ServerStyleSheet.collectStyles(appWithRouter);
     
     // Render to string
-    const html = renderToString(vdom);
+    const html = renderToString(styledApp);
+    
+    // Get the style tags
+    const styleTags = ServerStyleSheet.getStyleTags();
     
     // Capture the state after rendering
     const serverState = [...currentstates];
     
-    // Send response with rendered HTML and state
+    // Send response with rendered HTML, styles, and state
     res.writeHead(200, { 'Content-Type': 'text/html' });
-    res.end(createHtmlTemplate(html, serverState));
+    res.end(createHtmlTemplate(html, styleTags, serverState));
     
   } catch (error) {
     console.error('SSR Error:', error);

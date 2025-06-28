@@ -8,13 +8,27 @@
 <body>
     <button id="moveToIndex">Move to Index Page</button>
     <h1>SSR Demo Instructions</h1>
-    <p>To test Server-Side Rendering:</p>
+    <p>To test Server-Side Rendering with Routing and Styling:</p>
     <ol>
-        <li>Compile the TypeScript files: <code>npx tsc server.tsx app.tsx --jsx react --esModuleInterop --module commonjs --outDir dist</code></li>
-        <li>Run the server: <code>node dist/server.js</code></li>
+        <li>Install dependencies (if needed): <code>npm install</code></li>
+        <li>Build and run SSR server: <code>npm run ssr</code></li>
         <li>Visit <a href="http://localhost:3000">http://localhost:3000</a></li>
     </ol>
-    <p>You should see the app rendered on the server with hydration support!</p>
+    
+    <h2>Features to Test:</h2>
+    <ul>
+        <li><strong>Server-Side Rendering</strong>: View page source to see pre-rendered HTML</li>
+        <li><strong>Hydration</strong>: Interactive elements work immediately</li>
+        <li><strong>Client-Side Routing</strong>: Navigate between pages without refresh</li>
+        <li><strong>CSS-in-JS</strong>: Styled components with server-rendered styles</li>
+        <li><strong>State Management</strong>: Counter and input fields maintain state</li>
+    </ul>
+    
+    <h2>Alternative Commands:</h2>
+    <ul>
+        <li>Build only: <code>npm run build:ssr</code></li>
+        <li>Run server only: <code>npm run start:ssr</code></li>
+    </ul>
     <script>
         document.getElementById('moveToIndex').addEventListener('click', () => {
             window.location.href = 'index.html';
