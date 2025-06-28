@@ -5,6 +5,7 @@
 - [2.1 Parser](#21-Self-created-parser-using)
 - [2.2 Bundling](#22-bundling-by-tsc-with-tsconfig-options)
 - [3주차 소감](#3주차-소감)
+- [4주차 소감](#4주차-소감)
 
 ### 1주차 소감 (1st Week Feelings)
 [목차](#목차)
@@ -165,3 +166,11 @@ Let’s build a React from scratch: Part 3— React Suspense and Concurrent Mode
      
 - @jjaneyxx 님의 3주차 질문에서 궁금한 걸 Gemini에게 물어봤는데, 좋은 질문, 궁금할만 한 부분을 같이 고민할 수 있어서 유익한 스터디시간이었습니다.
     - [답변](gemini_answer_02.md)
+
+
+### 4주차 소감
+[목차](#목차)
+- 솔직하게 CRA는 deprecated고, 기존에 만들어둔 코드가 아쉬워서 우리의 custom react를 기반으로 한번 SSR 기초 개념만 한번 쌓아올려보았어요
+- 간단하게 이게 브라우저 단인지 서버 단인지 구분하고, 그 다음 suspend 등 처리를 적당히 나눈다는 개념이 코드로 뽑아서 정리하니 또 신기했습니다.
+- 결론적으로는 Next.JS 부트캠프에서 쓰던 그게 왜 이야 이게 이래서 혁명적이구나 하고 이해할 수 있었습니다.
+- 다만 SSR와 CSR를 잘 혼합하는 기준? 경계는 어떻게 설계하는 게 최적인지 고민거리인 거 같아요, (회사에서 잘 해야 할텐데)
