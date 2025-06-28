@@ -7,6 +7,7 @@
 </head>
 <body>
     <button id="moveToTsBaseApp">Move to TS base app</button>
+    <button id="moveToSSRDemo">Move to SSR Demo</button>
     <div id="myapp"></div>
     <div id="tsbaseapp"></div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>
@@ -33,6 +34,10 @@
 
         document.getElementById('moveToTsBaseApp').addEventListener('click', () => {
             window.location.href = 'app2.html';
+        });
+
+        document.getElementById('moveToSSRDemo').addEventListener('click', () => {
+            window.location.href = 'ssr-demo.html';
         });
     </script>
 </body>

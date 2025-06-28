@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom React SSR Demo</title>
+</head>
+<body>
+    <button id="moveToIndex">Move to Index Page</button>
+    <h1>SSR Demo Instructions</h1>
+    <p>To test Server-Side Rendering:</p>
+    <ol>
+        <li>Compile the TypeScript files: <code>npx tsc server.tsx app.tsx --jsx react --esModuleInterop --module commonjs --outDir dist</code></li>
+        <li>Run the server: <code>node dist/server.js</code></li>
+        <li>Visit <a href="http://localhost:3000">http://localhost:3000</a></li>
+    </ol>
+    <p>You should see the app rendered on the server with hydration support!</p>
+    <script>
+        document.getElementById('moveToIndex').addEventListener('click', () => {
+            window.location.href = 'index.html';
+        });
+    </script>
+</body>
+</html> 
