@@ -42,7 +42,7 @@ const processCssWithSelectors = (className: string, cssText: string): string => 
     lines.forEach(line => {
       if (line.includes(`.${className}:`)) {
         // This is a pseudo-selector, extract it
-        const match = line.match(/(.${className}:[^{]+){([^}]+)}/);
+        const match = line.match(new RegExp(`(.${className}:[^{]+){([^}]+)}`));
         if (match) {
           pseudoStyles += `${match[1]} { ${match[2]} }\n`;
         }
