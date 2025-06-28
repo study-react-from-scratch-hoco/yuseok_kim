@@ -174,3 +174,5 @@ Let’s build a React from scratch: Part 3— React Suspense and Concurrent Mode
 - 간단하게 이게 브라우저 단인지 서버 단인지 구분하고, 그 다음 suspend 등 처리를 적당히 나눈다는 개념이 코드로 뽑아서 정리하니 또 신기했습니다.
 - 결론적으로는 Next.JS 부트캠프에서 쓰던 그게 왜 이야 이게 이래서 혁명적이구나 하고 이해할 수 있었습니다.
 - 다만 SSR와 CSR를 잘 혼합하는 기준? 경계는 어떻게 설계하는 게 최적인지 고민거리인 거 같아요, (회사에서 잘 해야 할텐데)
+[참고 1: 블로그 요약](gemini_answer_03.md)
+[참고 2: 구현 요약](ssr-readme.md)
